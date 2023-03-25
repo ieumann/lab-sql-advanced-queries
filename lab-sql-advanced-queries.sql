@@ -37,12 +37,21 @@ max_film_count AS (
   SELECT MAX(num_films) AS max_num_films
   FROM actor_film_counts
 )
-SELECT f.title, a.first_name, a.last_name, COUNT(*) AS num_films
-FROM film AS f, film_actor AS fa, actor AS a, actor_film_counts AS afc, max_film_count AS mfc
-WHERE f.film_id = fa.film_id 
-  AND fa.actor_id = a.actor_id 
-  AND a.actor_id = afc.actor_id 
-  AND afc.num_films = mfc.max_num_films
-GROUP BY f.film_id, a.actor_id
+SELECT f.title, a.first_name, a.last_name, afc.num_films
+FROM film AS f 
+INNER JOIN film_actor AS fa ON f.film_id = fa.film_id 
+INNER JOIN actor AS a ON fa.actor_id = a.actor_id 
+INNER JOIN actor_film_counts AS afc ON a.actor_id = afc.actor_id 
+INNER JOIN (
+  SELECT fa.film_id, MAX(afc.num_films) AS max_num_films
+  FROM film_actor AS fa 
+  INNER JOIN actor_film_counts AS afc ON fa.actor_id = afc.actor_id
+  GROUP BY fa.film_id
+) AS max_film_counts ON fa.film_id = max_film_counts.film_id AND afc.num_films = max_film_counts.max_num_films
 ORDER BY f.title;
+
+
+
+
+
 
